@@ -1,6 +1,8 @@
 @file:OptIn(ExperimentalWasmDsl::class)
 
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinUsages
 import org.jetbrains.kotlin.gradle.targets.wasm.d8.D8EnvSpec
 import org.jetbrains.kotlin.gradle.targets.wasm.d8.D8Plugin
 
@@ -32,8 +34,21 @@ idea {
     module.generatedSourceDirs.add(projectDir.resolve("test-gen"))
 }
 
-val annotationsRuntimeClasspath: Configuration by configurations.creating { isTransitive = false }
 val testArtifacts: Configuration by configurations.creating
+
+val annotationsRuntimeClasspath by configurations.dependencyScope("annotationsRuntimeClasspath") {
+    isTransitive = false
+}
+val annotationsJvmRuntimeClasspath by configurations.resolvable("annotationsJvmRuntimeClasspath") {
+    extendsFrom(annotationsRuntimeClasspath)
+}
+val annotationsJsRuntimeClasspath by configurations.resolvable("annotationsJsRuntimeClasspath") {
+    extendsFrom(annotationsRuntimeClasspath)
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(KotlinUsages.KOTLIN_RUNTIME))
+        attribute(KotlinPlatformType.attribute, KotlinPlatformType.js)
+    }
+}
 
 dependencies {
     compileOnly(libs.kotlin.compiler)
@@ -67,12 +82,15 @@ buildConfig {
 }
 
 tasks.test {
-    dependsOn(annotationsRuntimeClasspath)
+    dependsOn(testArtifacts)
+    dependsOn(annotationsJvmRuntimeClasspath)
+    dependsOn(annotationsJsRuntimeClasspath)
 
     useJUnitPlatform()
     workingDir = rootDir
 
-    systemProperty("annotationsRuntime.classpath", annotationsRuntimeClasspath.asPath)
+    systemProperty("annotationsRuntime.jvm.classpath", annotationsJvmRuntimeClasspath.asPath)
+    systemProperty("annotationsRuntime.js.classpath", annotationsJsRuntimeClasspath.asPath)
 
     // Properties required to run the internal test framework.
     setLibraryProperty("org.jetbrains.kotlin.test.kotlin-stdlib", "kotlin-stdlib")

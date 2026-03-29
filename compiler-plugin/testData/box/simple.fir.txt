@@ -1,7 +1,7 @@
 FILE: simple.kt
     package foo.bar
 
-    public final fun box(): R|kotlin/String| {
+    @R|org/jetbrains/kotlin/compiler/plugin/template/SomeAnnotation|() public final fun box(): R|kotlin/String| {
         lval result: R|kotlin/String| = R|foo/bar/MyClass|().R|foo/bar/MyClass.foo|()
         ^box when () {
             ==(R|<local>/result|, String(Hello world)) ->  {

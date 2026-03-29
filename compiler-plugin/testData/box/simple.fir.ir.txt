@@ -1,5 +1,7 @@
 FILE fqName:foo.bar fileName:/simple.kt
   FUN name:box visibility:public modality:FINAL returnType:kotlin.String
+    annotations:
+      SomeAnnotation
     BLOCK_BODY
       VAR name:result type:kotlin.String [val]
         CALL 'public final fun foo (): kotlin.String declared in foo.bar.MyClass' type=kotlin.String origin=null
