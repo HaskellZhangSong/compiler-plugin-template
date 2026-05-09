@@ -15,6 +15,27 @@ Extension point registration:
 - K2 Frontend (FIR) extensions can be registered in `SimplePluginRegistrar`.
 - All other extensions (including K1 frontend and backend) can be registered in `SimplePluginComponentRegistrar`.
 
+## Function tracer changes
+
+| File | What changed |
+| --- | --- |
+| `compiler-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/TraceConfigurationKeys.kt` | Added `TRACE_ALL` compiler configuration key. |
+| `compiler-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/SimpleCommandLineProcessor.kt` | Added `--traceAll` CLI option and stores it in compiler configuration. |
+| `compiler-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/SimplePluginComponentRegistrar.kt` | Reads `traceAll` from config and passes it to IR extension registration. |
+| `compiler-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/ir/FunctionTracerTransformer.kt` | Implements IR transformation to inject function entry/exit trace `println` calls. |
+| `compiler-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/ir/SimpleIrGenerationExtension.kt` | Runs `FunctionTracerTransformer` with `transformChildrenVoid`. |
+| `plugin-annotations/src/commonMain/kotlin/org/jetbrains/kotlin/compiler/plugin/template/Trace.kt` | Added `@Trace` annotation for opt-in tracing. |
+| `gradle-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/SimpleGradleExtension.kt` | Added Gradle DSL property `traceAll`. |
+| `gradle-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/SimpleGradlePlugin.kt` | Added `functionTracer {}` extension and passes `traceAll` as subplugin option. |
+
+
+gradle-plugin — DSL
+
+| File | What changed |
+| --- | --- |
+| `SimpleGradleExtension.kt` | Adds `traceAll: Property<Boolean>` (default `false`). |
+| `SimpleGradlePlugin.kt` | Passes `traceAll` as a `SubpluginOption`; DSL block renamed to `functionTracer`. |
+
 ## Tests
 
 The [Kotlin compiler test framework][test-framework] is set up for this project.
@@ -26,6 +47,12 @@ To aid in running tests, it is recommended to install the [Kotlin Compiler DevKi
 which is pre-configured in this repository.
 
 [//]: # (Links)
+
+## Run Trace
+```bash
+./gradlew runDebugExecutableMacosArm64
+```
+
 
 [test-framework]: https://github.com/JetBrains/kotlin/blob/master/compiler/test-infrastructure/ReadMe.md
 [test-plugin]: https://github.com/JetBrains/kotlin-compiler-devkit

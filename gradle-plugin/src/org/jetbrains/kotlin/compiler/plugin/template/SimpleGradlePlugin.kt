@@ -11,7 +11,7 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 @Suppress("unused") // Used via reflection.
 class SimpleGradlePlugin : KotlinCompilerPluginSupportPlugin {
     override fun apply(target: Project) {
-        target.extensions.create("simplePlugin", SimpleGradleExtension::class.java)
+        target.extensions.create("functionTracer", SimpleGradleExtension::class.java)
     }
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
@@ -36,8 +36,12 @@ class SimpleGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
         return project.provider {
             val extension = project.extensions.getByType(SimpleGradleExtension::class.java)
-
-            emptyList()
+            listOf(
+                SubpluginOption(
+                    key = "traceAll",   // Must match SimpleCommandLineProcessor.OPTION_TRACE_ALL
+                    value = extension.traceAll.get().toString(),
+                )
+            )
         }
     }
 }
