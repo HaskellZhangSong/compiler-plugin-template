@@ -3,8 +3,10 @@ package org.jetbrains.kotlin.compiler.plugin.template.ir
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
+import org.jetbrains.kotlin.ir.builders.declarations.buildVariable
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.*
@@ -90,7 +92,7 @@ class FunctionTracerTransformer(
         // Step 1 – Wrap every IrReturn that belongs to this function so that
         //          the exit trace is emitted just before the return value is
         //          evaluated / used.
-        body.transformChildrenVoid(ReturnWrapper(declaration.symbol, functionName))
+        body.transformChildrenVoid(ReturnWrapper(declaration.symbol, declaration, functionName))
 
         // Step 2 – Prepend the entry trace as the very first statement.
         body.statements.add(0, buildPrintlnCall(">>> [TRACE] Entering $functionName"))
@@ -138,6 +140,7 @@ class FunctionTracerTransformer(
 
     private inner class ReturnWrapper(
         private val targetSymbol: IrReturnTargetSymbol,
+        private val targetFunction: IrSimpleFunction,
         private val functionName: String,
     ) : IrElementTransformerVoid() {
 
@@ -157,22 +160,59 @@ class FunctionTracerTransformer(
 
             val originalValue = expression.value
 
-            // Build: IrBlock { println("<<< ..." ); originalValue }
-            val block = IrBlockImpl(
-                UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                originalValue.type,
-            ).also { block ->
+            // For Unit returns: no temp variable needed — print exit then return Unit.
+            if (originalValue.type == irBuiltIns.unitType) {
+                val block = IrBlockImpl(UNDEFINED_OFFSET, UNDEFINED_OFFSET, originalValue.type)
                 block.statements.add(buildPrintlnCall("<<< [TRACE] Exiting $functionName"))
                 block.statements.add(originalValue)
+                return IrReturnImpl(
+                    startOffset = expression.startOffset,
+                    endOffset = expression.endOffset,
+                    type = expression.type,
+                    returnTargetSymbol = expression.returnTargetSymbol,
+                    value = block,
+                )
             }
 
-            return IrReturnImpl(
-                startOffset = expression.startOffset,
-                endOffset = expression.endOffset,
-                type = expression.type,          // Always Nothing for IrReturn
-                returnTargetSymbol = expression.returnTargetSymbol,
-                value = block,
+            // For non-Unit returns: evaluate the expression first into a temp variable,
+            // THEN print the exit trace, THEN return the temp.
+            // This guarantees that any function calls inside <expression> are fully
+            // resolved before the exit line is emitted, producing a correct call stack:
+            //
+            //   val _traceResult = <expression>   // inner calls happen here
+            //   println("<<< [TRACE] Exiting …")
+            //   return _traceResult
+            val tempVar = buildVariable(
+                parent = targetFunction,
+                startOffset = UNDEFINED_OFFSET,
+                endOffset = UNDEFINED_OFFSET,
+                origin = IrDeclarationOrigin.DEFINED,
+                name = Name.identifier("_traceResult"),
+                type = originalValue.type,
+            ).also {
+                it.initializer = originalValue
+            }
+
+            val getTemp = IrGetValueImpl(
+                UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                tempVar.type,
+                tempVar.symbol,
             )
+
+            // The outer block has type Nothing (same as IrReturn).
+            val block = IrBlockImpl(UNDEFINED_OFFSET, UNDEFINED_OFFSET, irBuiltIns.nothingType)
+            block.statements.add(tempVar)
+            block.statements.add(buildPrintlnCall("<<< [TRACE] Exiting $functionName"))
+            block.statements.add(
+                IrReturnImpl(
+                    startOffset = expression.startOffset,
+                    endOffset = expression.endOffset,
+                    type = expression.type,
+                    returnTargetSymbol = expression.returnTargetSymbol,
+                    value = getTemp,
+                )
+            )
+            return block
         }
     }
 }
