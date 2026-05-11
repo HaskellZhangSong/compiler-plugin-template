@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.gradle.java.test.fixtures)
     alias(libs.plugins.node.gradle)
     alias(libs.plugins.gradle.idea)
+    `maven-publish`
 }
 
 project.plugins.apply(D8Plugin::class.java)
@@ -145,3 +146,12 @@ fun Test.setLibraryProperty(propName: String, jarName: String) {
         ?: return
     systemProperty(propName, path)
 }
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
+}
+
