@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.node.gradle) apply false
     alias(libs.plugins.kotlin.binary.compatibility.validator) apply false
     alias(libs.plugins.buildconfig) apply false
+    id("maven-publish")
 }
 
 allprojects {
