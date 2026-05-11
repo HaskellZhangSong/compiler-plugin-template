@@ -95,6 +95,12 @@ class FunctionTracerTransformer(
         // Step 2 – Prepend the entry trace as the very first statement.
         body.statements.add(0, buildPrintlnCall(">>> [TRACE] Entering $functionName"))
 
+        // Step 3 – For Unit-returning functions, append exit trace at the end since
+        //          they have no explicit return statement (implicit return).
+        if (declaration.returnType == irBuiltIns.unitType) {
+            body.statements.add(buildPrintlnCall("<<< [TRACE] Exiting $functionName"))
+        }
+
         return declaration
     }
 
