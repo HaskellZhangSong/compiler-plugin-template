@@ -1,8 +1,8 @@
-package org.jetbrains.kotlin.compiler.plugin.template
+package dev.songzh.functiontracer
 
-import org.jetbrains.kotlin.compiler.plugin.template.runners.AbstractJsBoxTest
-import org.jetbrains.kotlin.compiler.plugin.template.runners.AbstractJvmBoxTest
-import org.jetbrains.kotlin.compiler.plugin.template.runners.AbstractJvmDiagnosticTest
+import dev.songzh.functiontracer.runners.AbstractJsBoxTest
+import dev.songzh.functiontracer.runners.AbstractJvmBoxTest
+import dev.songzh.functiontracer.runners.AbstractJvmDiagnosticTest
 import org.jetbrains.kotlin.generators.dsl.junit5.generateTestGroupSuiteWithJUnit5
 
 fun main() {

@@ -1,4 +1,4 @@
-package org.jetbrains.kotlin.compiler.plugin.template
+package dev.songzh.functiontracer
 
 /**
  * Marks a function for call tracing.
@@ -28,4 +28,3 @@ package org.jetbrains.kotlin.compiler.plugin.template
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.BINARY)
 public annotation class Trace
-

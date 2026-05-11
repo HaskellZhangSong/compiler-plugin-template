@@ -1,6 +1,6 @@
 package org.example
 
-import org.jetbrains.kotlin.compiler.plugin.template.Trace
+import dev.songzh.functiontracer.Trace
 
 /**
  * A simple greeter that shows tracing on functions with String return values

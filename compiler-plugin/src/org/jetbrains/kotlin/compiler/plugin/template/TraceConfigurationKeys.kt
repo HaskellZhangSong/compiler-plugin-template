@@ -1,4 +1,4 @@
-package org.jetbrains.kotlin.compiler.plugin.template
+package dev.songzh.functiontracer
 
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 
@@ -10,4 +10,3 @@ object TraceConfigurationKeys {
     val TRACE_ALL: CompilerConfigurationKey<Boolean> =
         CompilerConfigurationKey.create("trace all functions")
 }
-

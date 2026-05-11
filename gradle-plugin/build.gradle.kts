@@ -41,11 +41,11 @@ buildConfig {
 
 gradlePlugin {
     plugins {
-        create("SimplePlugin") {
+        create("FunctionTracerPlugin") {
             id = rootProject.group.toString()
-            displayName = "SimplePlugin"
-            description = "SimplePlugin"
-            implementationClass = "org.jetbrains.kotlin.compiler.plugin.template.SimpleGradlePlugin"
+            displayName = "Kotlin Function Tracer"
+            description = "A Kotlin compiler plugin that traces function entry and exit calls."
+            implementationClass = "dev.songzh.functiontracer.FunctionTracerPlugin"
         }
     }
 }

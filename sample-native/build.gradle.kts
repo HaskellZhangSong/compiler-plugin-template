@@ -3,7 +3,7 @@ plugins {
     kotlin("multiplatform") version "2.3.20"
 
     // Apply the local function-tracer compiler plugin (resolved via includeBuild in settings).
-    id("org.jetbrains.kotlin.compiler.plugin.template")
+    id("dev.songzh.functiontracer")
 }
 
 group = "org.example"
@@ -28,7 +28,7 @@ kotlin {
         commonMain.dependencies {
             // plugin-annotations is added automatically by the compiler plugin,
             // but we declare it explicitly here so the IDE can resolve @Trace.
-            implementation("org.jetbrains.kotlin.compiler.plugin.template:plugin-annotations:0.1.0-SNAPSHOT")
+            implementation("dev.songzh.functiontracer:plugin-annotations:0.1.0-SNAPSHOT")
         }
     }
 }

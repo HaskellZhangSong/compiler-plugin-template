@@ -1,8 +1,8 @@
-package org.jetbrains.kotlin.compiler.plugin.template.ir
+package dev.songzh.functiontracer.ir
 
 import org.jetbrains.kotlin.GeneratedDeclarationKey
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.compiler.plugin.template.fir.SimpleClassGenerator
+import dev.songzh.functiontracer.fir.SimpleClassGenerator
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.createBlockBody

@@ -1,17 +1,17 @@
-package org.jetbrains.kotlin.compiler.plugin.template
+package dev.songzh.functiontracer
 
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
-import org.jetbrains.kotlin.compiler.plugin.template.BuildConfig.ANNOTATIONS_LIBRARY_COORDINATES
+import dev.songzh.functiontracer.BuildConfig.ANNOTATIONS_LIBRARY_COORDINATES
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 
 @Suppress("unused") // Used via reflection.
-class SimpleGradlePlugin : KotlinCompilerPluginSupportPlugin {
+class FunctionTracerPlugin : KotlinCompilerPluginSupportPlugin {
     override fun apply(target: Project) {
-        target.extensions.create("functionTracer", SimpleGradleExtension::class.java)
+        target.extensions.create("functionTracer", FunctionTracerExtension::class.java)
     }
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
@@ -35,10 +35,10 @@ class SimpleGradlePlugin : KotlinCompilerPluginSupportPlugin {
         }
 
         return project.provider {
-            val extension = project.extensions.getByType(SimpleGradleExtension::class.java)
+            val extension = project.extensions.getByType(FunctionTracerExtension::class.java)
             listOf(
                 SubpluginOption(
-                    key = "traceAll",   // Must match SimpleCommandLineProcessor.OPTION_TRACE_ALL
+                    key = "traceAll",   // Must match FunctionTracerCommandLineProcessor.OPTION_TRACE_ALL
                     value = extension.traceAll.get().toString(),
                 )
             )

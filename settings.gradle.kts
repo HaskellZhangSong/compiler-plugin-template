@@ -12,7 +12,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "compiler-plugin-template"
+rootProject.name = "kotlin-function-tracer"
 
 include("compiler-plugin")
 include("gradle-plugin")

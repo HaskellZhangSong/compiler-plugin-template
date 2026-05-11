@@ -1,9 +1,9 @@
-package org.jetbrains.kotlin.compiler.plugin.template
+package dev.songzh.functiontracer
 
-import org.jetbrains.kotlin.compiler.plugin.template.fir.SimpleClassGenerator
+import dev.songzh.functiontracer.fir.SimpleClassGenerator
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 
-class SimplePluginRegistrar : FirExtensionRegistrar() {
+class FunctionTracerFirRegistrar : FirExtensionRegistrar() {
     override fun ExtensionRegistrarContext.configurePlugin() {
         +::SimpleClassGenerator
     }

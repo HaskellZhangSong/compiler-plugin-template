@@ -1,6 +1,6 @@
-package org.jetbrains.kotlin.compiler.plugin.template.runners
+package dev.songzh.functiontracer.runners
 
-import org.jetbrains.kotlin.compiler.plugin.template.services.configurePlugin
+import dev.songzh.functiontracer.services.configurePlugin
 import org.jetbrains.kotlin.test.FirParser
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
 import org.jetbrains.kotlin.test.directives.CodegenTestDirectives

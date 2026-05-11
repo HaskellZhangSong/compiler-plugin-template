@@ -1,27 +1,22 @@
-package org.jetbrains.kotlin.compiler.plugin.template
+package dev.songzh.functiontracer
 
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
 /**
- * Gradle DSL extension for the function tracer compiler plugin.
+ * Gradle DSL extension for the Kotlin Function Tracer compiler plugin.
  *
- * Usage in build.gradle.kts:
  * ```kotlin
  * functionTracer {
- *     // Trace every non-inline function in the module (default)
- *     traceAll = true
- *
- *     // OR opt into annotation-based tracing only
- *     traceAll = false
+ *     traceAll = true   // trace every non-inline function (default)
+ *     traceAll = false  // opt-in mode: only @Trace-annotated functions are traced
  * }
  * ```
  */
-open class SimpleGradleExtension @Inject constructor(objectFactory: ObjectFactory) {
+open class FunctionTracerExtension @Inject constructor(objectFactory: ObjectFactory) {
     /**
-     * When true, all non-inline, non-external functions in the compiled module
-     * are traced, regardless of @Trace annotation.
+     * When true, all non-inline, non-external functions are traced.
      * Defaults to true.
      */
     val traceAll: Property<Boolean> = objectFactory.property(Boolean::class.java).convention(true)

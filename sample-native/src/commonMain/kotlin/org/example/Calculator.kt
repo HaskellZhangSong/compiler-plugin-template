@@ -1,6 +1,6 @@
 package org.example
 
-import org.jetbrains.kotlin.compiler.plugin.template.Trace
+import dev.songzh.functiontracer.Trace
 
 /**
  * A simple calculator that demonstrates function-call tracing on Kotlin/Native.

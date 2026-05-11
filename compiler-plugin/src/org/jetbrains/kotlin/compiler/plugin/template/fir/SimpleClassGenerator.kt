@@ -1,4 +1,4 @@
-package org.jetbrains.kotlin.compiler.plugin.template.fir
+package dev.songzh.functiontracer.fir
 
 import org.jetbrains.kotlin.GeneratedDeclarationKey
 import org.jetbrains.kotlin.fir.FirSession

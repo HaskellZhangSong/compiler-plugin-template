@@ -1,4 +1,4 @@
-package org.jetbrains.kotlin.compiler.plugin.template.ir
+package dev.songzh.functiontracer.ir
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.IrStatement
@@ -19,8 +19,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 /** FQ name of the @Trace annotation defined in plugin-annotations. */
-private const val TRACE_ANNOTATION_FQ_NAME =
-    "org.jetbrains.kotlin.compiler.plugin.template.Trace"
+private const val TRACE_ANNOTATION_FQ_NAME = "dev.songzh.functiontracer.Trace"
 
 /**
  * IR transformer that wraps function bodies with entry/exit trace calls.

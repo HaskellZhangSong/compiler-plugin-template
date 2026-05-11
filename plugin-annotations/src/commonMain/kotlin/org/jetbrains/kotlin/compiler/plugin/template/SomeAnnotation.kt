@@ -1,3 +1,3 @@
-package org.jetbrains.kotlin.compiler.plugin.template
+package dev.songzh.functiontracer
 
 public annotation class SomeAnnotation

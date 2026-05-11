@@ -1,4 +1,4 @@
-package org.jetbrains.kotlin.compiler.plugin.template
+package dev.songzh.functiontracer
 
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOption
@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.config.CompilerConfiguration
 
 @Suppress("unused") // Used via reflection.
-class SimpleCommandLineProcessor : CommandLineProcessor {
+class FunctionTracerCommandLineProcessor : CommandLineProcessor {
     companion object {
         const val OPTION_TRACE_ALL = "traceAll"
     }
