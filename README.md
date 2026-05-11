@@ -48,8 +48,15 @@ which is pre-configured in this repository.
 
 [//]: # (Links)
 
-## Run Trace
+## Build Plugin
+
+```sh
+./gradlew :compiler-plugin:compileKotlin
+```
+
+## Run Trace Example
 ```bash
+cd sample-native
 ./gradlew runDebugExecutableMacosArm64
 ```
 
