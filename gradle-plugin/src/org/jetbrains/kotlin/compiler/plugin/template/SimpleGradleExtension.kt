@@ -10,19 +10,19 @@ import javax.inject.Inject
  * Usage in build.gradle.kts:
  * ```kotlin
  * functionTracer {
- *     // Trace only functions annotated with @Trace (default)
- *     traceAll = false
- *
- *     // OR trace every non-inline function in the module
+ *     // Trace every non-inline function in the module (default)
  *     traceAll = true
+ *
+ *     // OR opt into annotation-based tracing only
+ *     traceAll = false
  * }
  * ```
  */
 open class SimpleGradleExtension @Inject constructor(objectFactory: ObjectFactory) {
     /**
-     * When true, ALL non-inline, non-external functions in the compiled module
-     * are traced, regardless of whether they carry the @Trace annotation.
-     * Defaults to false (annotation-based opt-in).
+     * When true, all non-inline, non-external functions in the compiled module
+     * are traced, regardless of @Trace annotation.
+     * Defaults to true.
      */
-    val traceAll: Property<Boolean> = objectFactory.property(Boolean::class.java).convention(false)
+    val traceAll: Property<Boolean> = objectFactory.property(Boolean::class.java).convention(true)
 }

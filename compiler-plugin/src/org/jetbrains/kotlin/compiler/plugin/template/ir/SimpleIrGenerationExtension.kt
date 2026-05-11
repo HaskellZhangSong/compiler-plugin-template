@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.visitors.transformChildrenVoid
 
 class SimpleIrGenerationExtension(
-    private val traceAll: Boolean = false,
+    private val traceAll: Boolean = true,
 ) : IrGenerationExtension {
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         moduleFragment.transformChildrenVoid(

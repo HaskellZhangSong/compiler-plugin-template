@@ -12,7 +12,8 @@ class SimplePluginComponentRegistrar : CompilerPluginRegistrar() {
         get() = true
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
-        val traceAll = configuration.get(TraceConfigurationKeys.TRACE_ALL, false)
+        // Default to true: trace all functions unless explicitly turned off.
+        val traceAll = configuration.get(TraceConfigurationKeys.TRACE_ALL, true)
         IrGenerationExtension.registerExtension(SimpleIrGenerationExtension(traceAll))
     }
 }

@@ -37,5 +37,5 @@ kotlin {
 functionTracer {
     // false  → only functions annotated with @Trace are instrumented (default)
     // true   → every non-inline function in the module is instrumented
-    traceAll = false
+    traceAll = true
 }
