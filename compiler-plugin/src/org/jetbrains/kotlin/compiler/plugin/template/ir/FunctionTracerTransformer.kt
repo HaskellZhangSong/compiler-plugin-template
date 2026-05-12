@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.ir.builders.declarations.buildVariable
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
+import org.jetbrains.kotlin.ir.declarations.IrPackageFragment
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.*
@@ -112,8 +113,20 @@ class FunctionTracerTransformer(
     private fun buildFunctionName(function: IrSimpleFunction): String = buildString {
         val parent = function.parent
         if (parent is IrClass) {
+            val pkg = (parent.parent as? IrPackageFragment)?.packageFqName?.asString()
+            if (!pkg.isNullOrEmpty()) {
+                append(pkg)
+                append(".")
+            }
             append(parent.name.asString())
             append(".")
+        } else {
+            // Top-level function: walk up to IrPackageFragment to get the package name.
+            val pkg = (function.parent as? IrPackageFragment)?.packageFqName?.asString()
+            if (!pkg.isNullOrEmpty()) {
+                append(pkg)
+                append(".")
+            }
         }
         append(function.name.asString())
     }
