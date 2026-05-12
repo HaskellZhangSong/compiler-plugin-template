@@ -60,6 +60,13 @@ cd sample-native
 ./gradlew runDebugExecutableMacosArm64
 ```
 
+## Debug
+
+```sh
+cd sample-native
+ ./gradlew assemble -Dorg.gradle.debug=true --no-daemon -Pkotlin.compiler.execution.strategy=in-process      
+```
+Then use remote debugger to connect to the process on port 5005 in IntelliJ.
 
 [test-framework]: https://github.com/JetBrains/kotlin/blob/master/compiler/test-infrastructure/ReadMe.md
 [test-plugin]: https://github.com/JetBrains/kotlin-compiler-devkit
