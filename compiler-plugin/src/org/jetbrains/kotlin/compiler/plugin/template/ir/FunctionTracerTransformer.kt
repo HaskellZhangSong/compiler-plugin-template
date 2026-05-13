@@ -69,6 +69,18 @@ class FunctionTracerTransformer(
             ).first { it.owner.parameters.size == 1 }
     }
 
+    /**
+     * Lazily resolved reference to `dev.songzh.functiontracer.traceCurrentThreadId()`.
+     * This is the runtime helper (defined in plugin-annotations) that returns the
+     * current thread / worker ID as a string.
+     */
+    @Suppress("DEPRECATION")
+    private val threadIdSymbol by lazy {
+        pluginContext.referenceFunctions(
+            CallableId(FqName("dev.songzh.functiontracer"), Name.identifier("traceCurrentThreadId"))
+        ).first()
+    }
+
     // -------------------------------------------------------------------------
     // Main entry point: visit each function, process children first, then wrap.
     // -------------------------------------------------------------------------
@@ -131,20 +143,35 @@ class FunctionTracerTransformer(
         append(function.name.asString())
     }
 
-    private fun buildPrintlnCall(message: String): IrCall =
-        IrCallImpl.fromSymbolOwner(
+    private fun buildPrintlnCall(message: String): IrCall {
+        // Build the full message as a string template:
+        //   "$message [thread=${traceCurrentThreadId()}]"
+        // which compiles to an IrStringConcatenation.
+        val threadIdCall = IrCallImpl.fromSymbolOwner(
+            startOffset = UNDEFINED_OFFSET,
+            endOffset = UNDEFINED_OFFSET,
+            symbol = threadIdSymbol,
+        )
+        val concatenation = IrStringConcatenationImpl(
+            startOffset = UNDEFINED_OFFSET,
+            endOffset = UNDEFINED_OFFSET,
+            type = irBuiltIns.stringType,
+        ).apply {
+            arguments.add(irString("$message [thread="))
+            arguments.add(threadIdCall)
+            arguments.add(irString("]"))
+        }
+        return IrCallImpl.fromSymbolOwner(
             startOffset = UNDEFINED_OFFSET,
             endOffset = UNDEFINED_OFFSET,
             symbol = printlnSymbol,
         ).apply {
-            arguments[0] =
-                IrConstImpl(
-                    UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                    irBuiltIns.stringType,
-                    IrConstKind.String,
-                    message,
-                )
+            arguments[0] = concatenation
         }
+    }
+
+    private fun irString(value: String): IrConst =
+        IrConstImpl(UNDEFINED_OFFSET, UNDEFINED_OFFSET, irBuiltIns.stringType, IrConstKind.String, value)
 
     // -------------------------------------------------------------------------
     // Inner transformer – wraps IrReturn nodes for a specific function symbol.
