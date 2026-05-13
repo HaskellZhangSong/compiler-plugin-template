@@ -44,29 +44,20 @@ private const val TRACE_ANNOTATION_FQ_NAME = "dev.songzh.functiontracer.Trace"
 class FunctionTracerTransformer(
     private val pluginContext: IrPluginContext,
     private val traceAll: Boolean,
+    private val logFile: String = "",
 ) : IrElementTransformerVoid() {
 
     private val irBuiltIns = pluginContext.irBuiltIns
 
     /**
-     * Lazily resolved reference to `kotlin.io.println(Any?)`.
-     * We pick the single-argument overload (dispatch/extension-receiver-free function
-     * whose unified [parameters] list has exactly one entry).
-     * NOTE: `valueParameters` is deprecated in Kotlin 2.3+; use `parameters` instead.
+     * Lazily resolved reference to `dev.songzh.functiontracer.traceLog(message, logFile)`.
+     * This runtime helper writes to a file when logFile is non-empty, otherwise prints to stdout.
      */
-    private val printlnSymbol by lazy {
-        // `parameters` (Kotlin 2.3+ unified list) includes dispatch, extension, and value params.
-        // Top-level println(message: Any?) has no dispatch/extension receiver, parameters.size == 1.
-        // Use finderForBuiltins() – the recommended successor to the deprecated referenceFunctions().
-        val finder = pluginContext.finderForBuiltins()
-        val candidates = finder.findFunctions(
-            CallableId(FqName("kotlin.io"), Name.identifier("println"))
-        ).filter { it.owner.parameters.size == 1 }
-
-        candidates.firstOrNull()
-            ?: finder.findFunctions(
-                CallableId(FqName("kotlin"), Name.identifier("println"))
-            ).first { it.owner.parameters.size == 1 }
+    @Suppress("DEPRECATION")
+    private val traceLogSymbol by lazy {
+        pluginContext.referenceFunctions(
+            CallableId(FqName("dev.songzh.functiontracer"), Name.identifier("traceLog"))
+        ).first()
     }
 
     /**
@@ -161,12 +152,14 @@ class FunctionTracerTransformer(
             arguments.add(threadIdCall)
             arguments.add(irString("]"))
         }
+        // Call traceLog(message, logFile) — writes to file or stdout depending on logFile.
         return IrCallImpl.fromSymbolOwner(
             startOffset = UNDEFINED_OFFSET,
             endOffset = UNDEFINED_OFFSET,
-            symbol = printlnSymbol,
+            symbol = traceLogSymbol,
         ).apply {
             arguments[0] = concatenation
+            arguments[1] = irString(logFile)
         }
     }
 

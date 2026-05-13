@@ -9,4 +9,8 @@ object TraceConfigurationKeys {
      */
     val TRACE_ALL: CompilerConfigurationKey<Boolean> =
         CompilerConfigurationKey.create("trace all functions")
+
+    /** Optional path to a log file. Empty string → stdout. */
+    val LOG_FILE: CompilerConfigurationKey<String> =
+        CompilerConfigurationKey.create("trace log file path")
 }

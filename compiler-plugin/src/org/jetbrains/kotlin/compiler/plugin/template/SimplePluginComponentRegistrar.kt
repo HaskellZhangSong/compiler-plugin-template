@@ -12,8 +12,10 @@ class FunctionTracerComponentRegistrar : CompilerPluginRegistrar() {
         get() = true
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
-        // Default to true: trace all functions unless explicitly turned off.
-        val traceAll = configuration.get(TraceConfigurationKeys.TRACE_ALL, true)
-        IrGenerationExtension.registerExtension(FunctionTracerIrExtension(traceAll))
+        // Pass the configuration by reference. Options (traceAll, logFile) are read lazily
+        // inside FunctionTracerIrExtension.generate(), which runs after all CLI option
+        // processing is complete. The file-based fallback handles the K2/Native case where
+        // CommandLineProcessor.processOption() is not called by the compiler.
+        IrGenerationExtension.registerExtension(FunctionTracerIrExtension(configuration))
     }
 }
