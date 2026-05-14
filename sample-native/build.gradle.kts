@@ -30,6 +30,14 @@ kotlin {
             // but we declare it explicitly here so the IDE can resolve @Trace.
             implementation("dev.songzh.functiontracer:plugin-annotations:0.1.0-SNAPSHOT")
         }
+
+        val nativeMain by creating {
+            dependsOn(commonMain.get())
+        }
+
+        val macosArm64Main by getting { dependsOn(nativeMain) }
+        val linuxArm64Main by getting { dependsOn(nativeMain) }
+        val linuxX64Main   by getting { dependsOn(nativeMain) }
     }
 }
 
@@ -38,5 +46,5 @@ functionTracer {
     // false  → only functions annotated with @Trace are instrumented (default)
     // true   → every non-inline function in the module is instrumented
     traceAll = false
-    // logFile = "/tmp/trace.log"   // write trace output to a file; omit (or set to "") for stdout
+    logFile = "/tmp/trace.log"       // write trace output to a file; omit (or set to "") for stdout
 }

@@ -78,7 +78,4 @@ fun runDemo() {
     notrace()
 }
 
-fun main() {
-    runDemo()
-}
 
