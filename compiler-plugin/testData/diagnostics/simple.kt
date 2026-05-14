@@ -1,11 +1,9 @@
 // RUN_PIPELINE_TILL: FRONTEND
 
-package foo.bar
+import dev.songzh.functiontracer.Trace
 
-import org.jetbrains.kotlin.compiler.plugin.template.SomeAnnotation
+// @Trace on a non-function target should produce no diagnostic (annotation is @Target(FUNCTION)).
+// The plugin only instruments functions; class members are fine.
 
-@SomeAnnotation
-fun test() {
-    val s = MyClass().foo()
-    s.<!UNRESOLVED_REFERENCE!>inc<!>() // should be an error
-}
+@Trace
+fun add(a: Int, b: Int): Int = a + b

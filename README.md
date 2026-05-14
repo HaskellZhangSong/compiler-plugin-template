@@ -1,72 +1,140 @@
-# Kotlin Compiler Plugin template
+# Kotlin Function Tracer
 
-This is a template project for writing a compiler plugin for the Kotlin compiler.
+A Kotlin compiler plugin that automatically injects entry/exit trace logging into functions.  
+Works on **JVM, JS, Wasm and Native** targets.
 
-## Details
+## Features
 
-This project has three modules:
-- The [`:compiler-plugin`](compiler-plugin/src) module contains the compiler plugin itself.
-- The [`:plugin-annotations`](plugin-annotations/src/commonMain/kotlin) module contains annotations which can be used in
-user code for interacting with compiler plugin.
-- The [`:gradle-plugin`](gradle-plugin/src) module contains a simple Gradle plugin to add the compiler plugin and
-annotation dependency to a Kotlin project. 
+- Traces function entry (`>>> [TRACE] Entering …`) and exit (`<<< [TRACE] Exiting …`)
+- Includes thread/worker ID in every trace line
+- Configurable: trace **all** functions or only those annotated with `@Trace`
+- Log to **stdout** (default) or to a **file**
+- Zero runtime overhead on untraced functions — the compiler skips them entirely
 
-Extension point registration:
-- K2 Frontend (FIR) extensions can be registered in `SimplePluginRegistrar`.
-- All other extensions (including K1 frontend and backend) can be registered in `SimplePluginComponentRegistrar`.
+---
 
-## Function tracer changes
+## Quick start
 
-| File | What changed |
-| --- | --- |
-| `compiler-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/TraceConfigurationKeys.kt` | Added `TRACE_ALL` compiler configuration key. |
-| `compiler-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/SimpleCommandLineProcessor.kt` | Added `--traceAll` CLI option and stores it in compiler configuration. |
-| `compiler-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/SimplePluginComponentRegistrar.kt` | Reads `traceAll` from config and passes it to IR extension registration. |
-| `compiler-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/ir/FunctionTracerTransformer.kt` | Implements IR transformation to inject function entry/exit trace `println` calls. |
-| `compiler-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/ir/SimpleIrGenerationExtension.kt` | Runs `FunctionTracerTransformer` with `transformChildrenVoid`. |
-| `plugin-annotations/src/commonMain/kotlin/org/jetbrains/kotlin/compiler/plugin/template/Trace.kt` | Added `@Trace` annotation for opt-in tracing. |
-| `gradle-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/SimpleGradleExtension.kt` | Added Gradle DSL property `traceAll`. |
-| `gradle-plugin/src/org/jetbrains/kotlin/compiler/plugin/template/SimpleGradlePlugin.kt` | Added `functionTracer {}` extension and passes `traceAll` as subplugin option. |
+### 1. Apply the plugin
 
-
-gradle-plugin — DSL
-
-| File | What changed |
-| --- | --- |
-| `SimpleGradleExtension.kt` | Adds `traceAll: Property<Boolean>` (default `false`). |
-| `SimpleGradlePlugin.kt` | Passes `traceAll` as a `SubpluginOption`; DSL block renamed to `functionTracer`. |
-
-## Tests
-
-The [Kotlin compiler test framework][test-framework] is set up for this project.
-To create a new test, add a new `.kt` file in a [compiler-plugin/testData](compiler-plugin/testData) sub-directory:
-`testData/box` for codegen tests and `testData/diagnostics` for diagnostics tests.
-The generated JUnit 5 test classes will be updated automatically when tests are next run.
-They can be manually updated with the `generateTests` Gradle task as well.
-To aid in running tests, it is recommended to install the [Kotlin Compiler DevKit][test-plugin] IntelliJ plugin,
-which is pre-configured in this repository.
-
-[//]: # (Links)
-
-## Build Plugin
-
-```sh
-./gradlew :compiler-plugin:compileKotlin
+```kotlin
+// settings.gradle.kts
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
 ```
 
-## Run Trace Example
-```bash
+```kotlin
+// build.gradle.kts
+plugins {
+    kotlin("multiplatform") version "2.3.20"   // or jvm / android
+    id("dev.songzh.functiontracer") version "1.0.0"
+}
+```
+
+### 2. Configure (optional)
+
+```kotlin
+functionTracer {
+    // true  → instrument every non-inline function in the module (default)
+    // false → only functions annotated with @Trace
+    traceAll = true
+
+    // Write trace output to a file instead of stdout (optional)
+    logFile = "/tmp/trace.log"
+}
+```
+
+### 3. Annotate (when `traceAll = false`)
+
+```kotlin
+import dev.songzh.functiontracer.Trace
+
+@Trace
+fun compute(x: Int): Int = x * 2
+```
+
+### 4. Run
+
+Output written to stdout (or the configured file):
+
+```
+>>> [TRACE] Entering com.example.compute [thread=1]
+<<< [TRACE] Exiting  com.example.compute [thread=1]
+```
+
+---
+
+## File handle lifecycle
+
+`traceLog` keeps an open file handle per thread (Native) or per JVM process (JVM) so  
+`fopen`/file-open is called only once regardless of how many trace lines are written.  
+All writes are flushed immediately — no data is lost if the process crashes.
+
+Call `closeTraceLog()` (available on Native and JVM) to explicitly release the handle:
+
+```kotlin
+import dev.songzh.functiontracer.closeTraceLog
+
+fun main() {
+    runMyApp()
+    closeTraceLog()   // optional; OS/JVM releases handles at process exit anyway
+}
+```
+
+---
+
+## Project structure
+
+| Module | Purpose |
+|---|---|
+| [`compiler-plugin`](compiler-plugin/src) | IR transformer that injects trace calls |
+| [`plugin-annotations`](plugin-annotations/src) | `@Trace` annotation + `traceLog` runtime helper (multiplatform) |
+| [`gradle-plugin`](gradle-plugin/src) | Gradle DSL — `functionTracer { }` extension |
+
+---
+
+## Building
+
+```sh
+./gradlew build
+```
+
+## Running the Native sample
+
+```sh
 cd sample-native
 ./gradlew runDebugExecutableMacosArm64
 ```
 
-## Debug
+## Running tests
+
+```sh
+./gradlew :compiler-plugin:test
+```
+
+Tests use the [Kotlin compiler test framework](https://github.com/JetBrains/kotlin/blob/master/compiler/test-infrastructure/ReadMe.md).  
+Add `.kt` files under `compiler-plugin/testData/box` (codegen) or `compiler-plugin/testData/diagnostics`.  
+Golden IR-dump files are created automatically on the first test run.
+
+## Debugging (attach IntelliJ remote debugger)
 
 ```sh
 cd sample-native
- ./gradlew assemble -Dorg.gradle.debug=true --no-daemon -Pkotlin.compiler.execution.strategy=in-process      
+./gradlew assemble \
+    -Dorg.gradle.debug=true \
+    --no-daemon \
+    -Pkotlin.compiler.execution.strategy=in-process
 ```
-Then use remote debugger to connect to the process on port 5005 in IntelliJ.
 
-[test-framework]: https://github.com/JetBrains/kotlin/blob/master/compiler/test-infrastructure/ReadMe.md
-[test-plugin]: https://github.com/JetBrains/kotlin-compiler-devkit
+Connect a **Remote JVM Debug** run configuration to port **5005**.  
+Install the [Kotlin Compiler DevKit](https://github.com/JetBrains/kotlin-compiler-devkit) plugin for the best IDE experience.
+
+---
+
+## License
+
+Apache 2.0 — see [LICENSE.txt](LICENSE.txt).

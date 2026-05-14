@@ -28,8 +28,8 @@ class FunctionTracerIrExtension(
         // This works for JVM and JS compilations.
         val cfgTraceAll = configuration.get(TraceConfigurationKeys.TRACE_ALL)
         val cfgLogFile  = configuration.get(TraceConfigurationKeys.LOG_FILE)
-        if (cfgTraceAll != null || cfgLogFile != null) {
-            return TraceOptions(traceAll = cfgTraceAll ?: true, logFile = cfgLogFile ?: "")
+        if (cfgTraceAll != null && cfgLogFile != null) {
+            return TraceOptions(traceAll = cfgTraceAll, logFile = cfgLogFile)
         }
 
         // Fallback path: for K2/Native in-process compilation the Kotlin compiler does

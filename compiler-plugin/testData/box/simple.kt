@@ -1,9 +1,10 @@
-package foo.bar
-
-import org.jetbrains.kotlin.compiler.plugin.template.SomeAnnotation
-
-@SomeAnnotation
+// WITH_STDLIB
+import dev.songzh.functiontracer.Trace
+@Trace
+fun greet(name: String): String {
+    return "Hello, $name!"
+}
 fun box(): String {
-    val result = MyClass().foo()
-    return if (result == "Hello world") { "OK" } else { "Fail: $result" }
+    val result = greet("world")
+    return if (result == "Hello, world) "OK" else "Fail: $result"
 }

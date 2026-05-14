@@ -26,7 +26,7 @@ private const val TRACE_ANNOTATION_FQ_NAME = "dev.songzh.functiontracer.Trace"
  * IR transformer that wraps function bodies with entry/exit trace calls.
  *
  * For every function that should be traced it:
- *  1. Prepends `println(">>> [TRACE] Entering <name>")` to the function body.
+ *  1. Prepends `traceLog(">>> [TRACE] Entering <name>", logFile)` to the function body.
  *  2. Transforms every `IrReturn` that targets this function into:
  *     ```
  *     return run {

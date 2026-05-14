@@ -9,5 +9,5 @@ plugins {
 
 allprojects {
     group = "dev.songzh.functiontracer"
-    version = "0.1.0-SNAPSHOT"
+    version = "1.0.0"
 }
