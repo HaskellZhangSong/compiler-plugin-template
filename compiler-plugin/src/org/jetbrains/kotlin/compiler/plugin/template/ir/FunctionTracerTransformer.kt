@@ -91,6 +91,9 @@ class FunctionTracerTransformer(
         // Skip functions that cannot (or should not) be traced.
         if (declaration.isInline) return declaration
         if (declaration.isExternal) return declaration
+        // Skip lambdas and anonymous functions — they have no meaningful name and
+        // were never meant to be individually traced.
+        if (declaration.origin == IrDeclarationOrigin.LOCAL_FUNCTION_FOR_LAMBDA) return declaration
 
         val shouldTrace = traceAll ||
                 declaration.hasAnnotation(FqName(TRACE_ANNOTATION_FQ_NAME))
