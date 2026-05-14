@@ -38,5 +38,5 @@ functionTracer {
     // false  → only functions annotated with @Trace are instrumented (default)
     // true   → every non-inline function in the module is instrumented
     traceAll = false
-    // logFile = "/tmp/trace.log"   // write trace output to a file; omit (or set to "") for stdout
+    logFile = "/tmp/trace.log"       // write trace output to a file; omit (or set to "") for stdout
 }
