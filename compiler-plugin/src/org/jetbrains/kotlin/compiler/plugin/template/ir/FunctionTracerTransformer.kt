@@ -19,6 +19,12 @@ import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
+enum class EntryOrExit {
+    ENTRY,
+    EXIT
+}
+
+
 /** FQ name of the @Trace annotation defined in plugin-annotations. */
 private const val TRACE_ANNOTATION_FQ_NAME = "dev.songzh.functiontracer.Trace"
 
@@ -26,7 +32,7 @@ private const val TRACE_ANNOTATION_FQ_NAME = "dev.songzh.functiontracer.Trace"
  * IR transformer that wraps function bodies with entry/exit trace calls.
  *
  * For every function that should be traced it:
- *  1. Prepends `traceLog(">>> [TRACE] Entering <name>", logFile)` to the function body.
+ *  1. Prepends `traceLog(">>> [TRACE] [thread-id = xxx] Entering <name>", logFile)` to the function body.
  *  2. Transforms every `IrReturn` that targets this function into:
  *     ```
  *     return run {
@@ -98,12 +104,12 @@ class FunctionTracerTransformer(
         body.transformChildrenVoid(ReturnWrapper(declaration.symbol, declaration, functionName))
 
         // Step 2 – Prepend the entry trace as the very first statement.
-        body.statements.add(0, buildPrintlnCall(">>> [TRACE] Entering $functionName"))
+        body.statements.add(0, buildPrintlnCall(functionName, EntryOrExit.ENTRY))
 
         // Step 3 – For Unit-returning functions, append exit trace at the end since
         //          they have no explicit return statement (implicit return).
         if (declaration.returnType == irBuiltIns.unitType) {
-            body.statements.add(buildPrintlnCall("<<< [TRACE] Exiting $functionName"))
+            body.statements.add(buildPrintlnCall(functionName, EntryOrExit.EXIT))
         }
 
         return declaration
@@ -134,7 +140,7 @@ class FunctionTracerTransformer(
         append(function.name.asString())
     }
 
-    private fun buildPrintlnCall(message: String): IrCall {
+    private fun buildPrintlnCall(message: String, entryOrExit: EntryOrExit): IrCall {
         // Build the full message as a string template:
         //   "$message [thread=${traceCurrentThreadId()}]"
         // which compiles to an IrStringConcatenation.
@@ -143,14 +149,20 @@ class FunctionTracerTransformer(
             endOffset = UNDEFINED_OFFSET,
             symbol = threadIdSymbol,
         )
+        // Insert [threadId] immediately after "[TRACE] ":
+        //   ">>> [TRACE] [thread_id = <id>] Entering …"
+        val entryOrExitArrow = if (entryOrExit == EntryOrExit.EXIT) "<<<" else ">>>"
+        val entryOrExitString = if (entryOrExit == EntryOrExit.EXIT) "Exiting" else "Entering"
+        val traceTag = "[TRACE]"
+
         val concatenation = IrStringConcatenationImpl(
             startOffset = UNDEFINED_OFFSET,
             endOffset = UNDEFINED_OFFSET,
             type = irBuiltIns.stringType,
         ).apply {
-            arguments.add(irString("$message [thread="))
+            arguments.add(irString("$entryOrExitArrow $traceTag [thread-id = "))
             arguments.add(threadIdCall)
-            arguments.add(irString("]"))
+            arguments.add(irString("] $entryOrExitString $message"))
         }
         // Call traceLog(message, logFile) — writes to file or stdout depending on logFile.
         return IrCallImpl.fromSymbolOwner(
@@ -195,7 +207,7 @@ class FunctionTracerTransformer(
             // For Unit returns: no temp variable needed — print exit then return Unit.
             if (originalValue.type == irBuiltIns.unitType) {
                 val block = IrBlockImpl(UNDEFINED_OFFSET, UNDEFINED_OFFSET, originalValue.type)
-                block.statements.add(buildPrintlnCall("<<< [TRACE] Exiting $functionName"))
+                block.statements.add(buildPrintlnCall(functionName, EntryOrExit.EXIT))
                 block.statements.add(originalValue)
                 return IrReturnImpl(
                     startOffset = expression.startOffset,
@@ -212,7 +224,7 @@ class FunctionTracerTransformer(
             // resolved before the exit line is emitted, producing a correct call stack:
             //
             //   val _traceResult = <expression>   // inner calls happen here
-            //   println("<<< [TRACE] Exiting …")
+            //   println("<<< [TRACE] [thread-id = xxx] Exiting …")
             //   return _traceResult
             val tempVar = buildVariable(
                 parent = targetFunction,
@@ -234,7 +246,7 @@ class FunctionTracerTransformer(
             // The outer block has type Nothing (same as IrReturn).
             val block = IrBlockImpl(UNDEFINED_OFFSET, UNDEFINED_OFFSET, irBuiltIns.nothingType)
             block.statements.add(tempVar)
-            block.statements.add(buildPrintlnCall("<<< [TRACE] Exiting $functionName"))
+            block.statements.add(buildPrintlnCall(functionName, EntryOrExit.EXIT))
             block.statements.add(
                 IrReturnImpl(
                     startOffset = expression.startOffset,
